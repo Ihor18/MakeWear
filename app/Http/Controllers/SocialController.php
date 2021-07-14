@@ -3,11 +3,12 @@
 namespace App\Http\Controllers;
 
 
+use App\Models\Provider;
 use App\Models\RetailBuyer;
 use App\Models\User;
+use Illuminate\Support\Facades\Redirect;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Facades\Auth;
-
 
 
 class SocialController extends Controller
@@ -22,21 +23,22 @@ class SocialController extends Controller
     {
 
 
-            $user = Socialite::driver('google')->stateless()->user();
-            $name = explode(' ',$user->name);
+        $user = Socialite::driver('google')->stateless()->user();
+        $name = explode(' ', $user->name);
         $current_user = User::where('email', $user->email)->first();
+        $provider = Provider::where('email', $user->email)->first();
 
-
-            if($current_user){
+        if (!$provider) {
+            if ($current_user) {
                 Auth::login($current_user);
                 return redirect('/');
-            }else{
+            } else {
 
                 RetailBuyer::create([
                     'first_name' => $name[0],
                     'last_name' => $name[1],
                     'email' => $user->email,
-                    'google_id'=> $user->id,
+                    'google_id' => $user->id,
                     'password' => encrypt('123456dummy'),
                 ]);
                 $user = RetailBuyer::latest()->first();
@@ -44,10 +46,13 @@ class SocialController extends Controller
                     'email' => $user->email,
                     'password' => encrypt('123456dummy'),
                     'user_id' => $user->id,
-                    'user_type'=> 'retail_buyer',
+                    'user_type' => 'retail_buyer',
                 ]);
                 Auth::login($newUser);
                 return redirect('/');
+            }
+        } else {
+            return Redirect()->route('login')->withErrors(['На этот емейл зарегестрирован поставщик!']);
+        }
     }
-}
 }

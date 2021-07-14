@@ -7,6 +7,9 @@
                 <div class="card">
 
                     <div class="card-body">
+                        @if($errors->any())
+                            <h5 class="text-center alert-danger">{{$errors->first()}}</h5>
+                        @endif
                         <h4 class="text-center m-3">Вход в MW</h4>
                         <form method="POST" action="{{ route('login') }}">
                             @csrf
